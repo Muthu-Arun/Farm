@@ -35,12 +35,16 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42)
 
 # Convert data to PyTorch tensors
-X_train_tensor = torch.tensor(X_train, dtype=torch.float32).unsqueeze(1)  # Add channel dimension (1 channel)
+X_train_tensor = torch.tensor(X_train, dtype=torch.float32).unsqueeze(
+    1)  # Add channel dimension (1 channel)
 y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
-X_test_tensor = torch.tensor(X_test, dtype=torch.float32).unsqueeze(1)  # Add channel dimension (1 channel)
+X_test_tensor = torch.tensor(X_test, dtype=torch.float32).unsqueeze(
+    1)  # Add channel dimension (1 channel)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
 
 # Step 4: Define the CNN Model for Tabular Data
+
+
 class CNNTabularModel(nn.Module):
     def __init__(self, input_dim):
         super(CNNTabularModel, self).__init__()
@@ -58,22 +62,27 @@ class CNNTabularModel(nn.Module):
         # Assuming input_dim is the number of features (columns)
         conv_output_dim = input_dim  # Start with input size
         for _ in range(2):  # Apply 2 conv layers
-            conv_output_dim = (conv_output_dim + 2 * 1 - 3) // 1 + 1  # Convolution
-            conv_output_dim = conv_output_dim // 2  # After pooling (divided by 2)
-        
+            conv_output_dim = (conv_output_dim + 2 * 1 -
+                               3) // 1 + 1  # Convolution
+            # After pooling (divided by 2)
+            conv_output_dim = conv_output_dim // 2
+
         # Fully connected layers after convolution
         self.fc1 = nn.Linear(32 * conv_output_dim, 128)
         self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 1)  # Output layer for predicting Production (regression)
+        # Output layer for predicting Production (regression)
+        self.fc3 = nn.Linear(64, 1)
 
     def forward(self, x):
         x = self.pool(torch.relu(self.conv1(x)))  # Apply conv1 and pooling
         x = self.pool(torch.relu(self.conv2(x)))  # Apply conv2 and pooling
-        x = x.view(x.size(0), -1)  # Flatten the output for the fully connected layers
+        # Flatten the output for the fully connected layers
+        x = x.view(x.size(0), -1)
         x = torch.relu(self.fc1(x))  # Apply fully connected layers
         x = torch.relu(self.fc2(x))
         x = self.fc3(x)  # Output layer
         return x
+
 
 # Initialize the model
 input_dim = X_train.shape[1]  # Number of features in the input
@@ -84,7 +93,7 @@ criterion = nn.MSELoss()  # Mean Squared Error for regression
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Step 6: Training the model
-epochs = 100
+epochs = 200
 for epoch in range(epochs):
     model.train()
 
@@ -113,4 +122,5 @@ with torch.no_grad():
 
     # Example: Print some predictions alongside the actual values
     for i in range(5):
-        print(f'Predicted: {test_predictions[i].item():.4f}, Actual: {y_test[i]:.4f}')
+        print(f'Predicted: {test_predictions[i].item():.4f}, Actual: {
+              y_test[i]:.4f}')
